@@ -169,7 +169,7 @@ class SuperPoint(BaseModel):
         "remove_borders": 4,
         "legacy_sampling": True,  # True to use the old broken sampling
         "weights_path": Path(__file__).parent.parent / 'weights'/'superpoint_v1.pth',
-        "load_weights: True
+        "load_weights": True
     }
     required_data_keys = ["image"]
 
