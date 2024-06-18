@@ -50,6 +50,7 @@ Original code: github.com/MagicLeapResearch/SuperPointPretrainedNetwork
 Adapted by Philipp Lindenberger (Phil26AT)
 """
 import os.path
+from pathlib import Path
 
 import torch
 from torch import nn
@@ -167,6 +168,8 @@ class SuperPoint(BaseModel):
         "randomize_keypoints_training": False,
         "remove_borders": 4,
         "legacy_sampling": True,  # True to use the old broken sampling
+        "weights_path": Path(__file__).parent.parent / 'weights'/'superpoint_v1.pth',
+        "load_weights: True
     }
     required_data_keys = ["image"]
 
@@ -199,8 +202,8 @@ class SuperPoint(BaseModel):
             self.convDb = nn.Conv2d(
                 c5, conf.descriptor_dim, kernel_size=1, stride=1, padding=0
             )
-
-        self.load_state_dict(torch.load(os.path.join('weights', 'superpoint_v1.pth')))
+        if conf.load_weights:
+            self.load_state_dict(torch.load(conf.weights_path))
 
     def _forward(self, data):
         image = data["image"]
