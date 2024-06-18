@@ -595,7 +595,7 @@ class RegressionMatcher(nn.Module):
         elif "pow" in self.sample_mode:
             dense_certainty = dense_certainty**(1/3)
         elif "naive" in self.sample_mode:
-            dense_certainty = torch.ones_like(dense_certainty)
+            dense_certainty = torch.ones_like(dense_certainty, device=dense_matches.device)
         matches, certainty = (
             dense_matches.reshape(-1, 4),
             dense_certainty.reshape(-1),
@@ -604,13 +604,13 @@ class RegressionMatcher(nn.Module):
         if not certainty.sum(): certainty = certainty + 1e-8
         good_samples = torch.multinomial(certainty, 
                           num_samples = min(expansion_factor*num, len(certainty)), 
-                          replacement=False)
+                          replacement=False).to(matches.device)
         good_matches, good_certainty = matches[good_samples], certainty[good_samples]
         if "balanced" not in self.sample_mode:
             return good_matches, good_certainty
 
         from dkm.utils.kde import kde
-        density = kde(good_matches, std=0.1)
+        density = kde(good_matches, std=0.1, device=good_matches.device)
         p = 1 / (density+1)
         p[density < 10] = 1e-7 # Basically should have at least 10 perfect neighbours, or around 100 ok ones
         balanced_samples = torch.multinomial(p, 
@@ -657,6 +657,7 @@ class RegressionMatcher(nn.Module):
         im2_path,
         *args,
         batched=False,
+        device='cuda'
     ):
         assert not (batched and self.upsample_preds), "Cannot upsample preds if in batchmode (as we don't have access to high res images). You can turn off upsample_preds by model.upsample_preds = False "
         symmetric = self.symmetric
